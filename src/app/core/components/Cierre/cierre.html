@@ -1,0 +1,66 @@
+<form [formGroup]="formCierreComponent">
+    <div class="card">
+        <p-fluid class="flex flex-col md:flex-row gap-8">
+            <div class="w-full">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
+                        <div class="font-semibold text-xl">Fecha: </div>
+                        <p-datepicker [showIcon]="true" [showButtonBar]="true"></p-datepicker>
+                    </div>
+                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
+                        <div class="font-semibold text-xl">Turno: </div>
+                        <p-select [options]="dropdownValues" optionLabel="name" placeholder="Select"></p-select>
+                    </div>
+                    <div class="col-span-1 sm:col-span-1 lg:col-span-1">
+                        <div class="font-semibold text-xl">Local: </div>
+                        <p-select [options]="dropdownValues" optionLabel="name" placeholder="Select"></p-select>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4 gap-1">
+                    <p-button label="Iniciar" icon="pi pi-search" />
+                    <p-button label="Calcular" icon="pi pi-calculator" />
+                    <p-button label="Limpiar" icon="pi pi-eraser" />
+                    <p-button label="Salirr" icon="pi pi-sign-out" />
+                </div>
+            </div>
+        </p-fluid>
+    </div>
+    <div class="card">
+        <ag-grid-angular class="ag-theme-alpine w-full h-[400px]" [rowData]="rowDataGrupo"
+            [gridOptions]="gridOptionsGrupo" [pagination]="true" #agGrid>
+        </ag-grid-angular>
+    </div>
+    <div class="card">
+        <p-fluid class="flex flex-col md:flex-row gap-8">
+            <div class="w-full">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <div class="font-semibold text-xl">Tipos: </div>
+                        <p-select [options]="dropdownValues" optionLabel="name" placeholder="Select" formControlName="tipo"></p-select>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-xl">Monto: </div>
+                        <p-inputnumber showButtons mode="decimal" formControlName="monto"></p-inputnumber>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-xl">Descripción: </div>
+                        <textarea pTextarea placeholder="Your Message" [autoResize]="true" rows="3" formControlName="descripcion" cols="30"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4 gap-1">
+                    <p-button label="Agregar" icon="pi pi-plus" (onClick)="agregar()" />
+                </div>
+            </div>
+            <div class="w-full">
+                <ag-grid-angular class="ag-theme-alpine w-full h-[400px]" [rowData]="rowDataTipo"
+                    [gridOptions]="gridOptionsTipo" [pagination]="true" #agGrid>
+                </ag-grid-angular>
+            </div>
+            <div class="w-full">
+                <ag-grid-angular class="ag-theme-alpine w-full h-[400px]" [rowData]="rowDataSeccion"
+                    [gridOptions]="gridOptionsSeccion" [pagination]="true" #agGrid>
+                </ag-grid-angular>
+            </div>
+        </p-fluid>
+    </div>
+</form>

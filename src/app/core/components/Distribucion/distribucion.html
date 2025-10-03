@@ -1,0 +1,81 @@
+<form [formGroup]="formCajaComponent">
+    <div class="card">
+        <p-tabs [value]="value">
+            <p-tablist>
+                <p-tab [value]="0">Registrar</p-tab>
+                <p-tab [value]="1">Editar</p-tab>
+            </p-tablist>
+            <p-tabpanels>
+                <p-tabpanel [value]="0">
+                    <div class="w-full">
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="col-span-12 md:col-span-3">
+                                <label for="turno" class="block mb-2 font-medium">Fecha: (*)</label>
+                                <p-datepicker class="w-full" [showIcon]="true" [showButtonBar]="true"
+                                    formControlName="fechaRegistro"></p-datepicker>
+                            </div>
+                            <div class="col-span-12 md:col-span-3">
+                                <label for="area" class="block mb-2 font-medium">Turno: (*)</label>
+                                <p-select class="w-full" [options]="dropdownValues" optionLabel="name"
+                                    placeholder="Select" formControlName="turnoRegistro"></p-select>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-4 gap-1">
+                            <p-button label="Mostrar" icon="pi pi-eye" (onClick)="mostrarGrilla()" />
+                            <p-button label="Sin Ceros" icon="pi pi-list-check" (onClick)="filtrarSinCeros()"/>
+                            <p-button label="Validar" icon="pi pi-check-circle" (onClick)="validarGrilla()" />
+                            <p-button label="Limpiar" icon="pi pi-eraser" (onClick)="limpiarGrilla()" />
+                            <p-button label="Exportar" icon="pi pi-file-excel" />
+                        </div>
+                    </div>
+                </p-tabpanel>
+                <p-tabpanel [value]="1">
+                    <div class="w-full">
+                        <div class="grid grid-cols-12 gap-4">
+                            <div class="col-span-12 md:col-span-3">
+                                <label for="turno" class="block mb-2 font-medium">Fecha: (*)</label>
+                                <p-datepicker class="w-full" [showIcon]="true" [showButtonBar]="true"></p-datepicker>
+                            </div>
+
+                            <div class="col-span-12 md:col-span-3">
+                                <label for="area" class="block mb-2 font-medium">Turno: (*)</label>
+                                <p-select class="w-full" [options]="dropdownValues" optionLabel="name"
+                                    placeholder="Select"></p-select>
+                            </div>
+
+                            <div class="col-span-12 md:col-span-3">
+                                <label for="area" class="block mb-2 font-medium">Grupo: </label>
+                                <p-select class="w-full" [options]="dropdownValues" optionLabel="name"
+                                    placeholder="Select"></p-select>
+                            </div>
+
+                            <div class="col-span-12 md:col-span-3">
+                                <label for="area" class="block mb-2 font-medium">Producto: </label>
+                                <p-select class="w-full" [options]="dropdownValues" optionLabel="name"
+                                    placeholder="Select"></p-select>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-4 gap-1">
+                            <p-button label="Mostrar" icon="pi pi-eye" (onClick)="mostrarGrilla()" />
+                            <p-button label="Sin Ceros" icon="pi pi-list-check" (onClick)="filtrarSinCeros()"/>
+                            <p-button label="Validar" icon="pi pi-check-circle" (onClick)="validarGrilla()" />
+                            <p-button label="Limpiar" icon="pi pi-eraser" (onClick)="limpiarGrilla()" />
+                            <p-button label="Exportar" icon="pi pi-file-excel" />
+                        </div>
+                    </div>
+                </p-tabpanel>
+            </p-tabpanels>
+        </p-tabs>
+    </div>
+
+    <div class="card">
+        <ag-grid-angular class="ag-theme-alpine w-full h-[400px]" [rowData]="rowData" [gridOptions]="gridOptions"
+            [pagination]="true" #agGrid>>
+        </ag-grid-angular>
+        <div class="flex justify-end mt-4 gap-1">
+            <p-button *ngIf="mostrarGuardar" label="Guardar" icon="pi pi-save" (onClick)="guardar()" />
+            <p-button *ngIf="mostrarCancelar" label="Cancelar" icon="pi pi-times" (onClick)="cancelarDistribucion()" />
+        </div>
+    </div>
+</form>
