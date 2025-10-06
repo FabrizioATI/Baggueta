@@ -216,7 +216,7 @@ import { Country } from '../service/customer.service';
                         <p-inputgroup-addon>
                             <i class="pi pi-star-fill"></i>
                         </p-inputgroup-addon>
-                        <p-inputnumber placeholder="Price" />
+                        <p-inputnumber placeholder="Price1111111111111111" />
                         <p-inputgroup-addon>$</p-inputgroup-addon>
                         <p-inputgroup-addon>.00</p-inputgroup-addon>
                     </p-inputgroup>

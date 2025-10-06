@@ -96,7 +96,7 @@ export class Distribucion implements OnInit, OnDestroy {
 
     private destroy$ = new Subject<void>();
 
-    public formCajaComponent: FormGroup = new FormGroup({});
+    public formDistribucionComponent: FormGroup = new FormGroup({});
 
     ngOnInit() {
         this.configurarComponente();
@@ -112,7 +112,7 @@ export class Distribucion implements OnInit, OnDestroy {
     ];
 
     public crearFormulario() {
-        this.formCajaComponent = new FormGroup({
+        this.formDistribucionComponent = new FormGroup({
             fechaRegistro: new FormControl(),
             turnoRegistro: new FormControl()
         });
@@ -204,7 +204,7 @@ export class Distribucion implements OnInit, OnDestroy {
 
     public limpiarGrilla() {
         this.gridApi.setGridOption("rowData", this.rowData);
-        this.formCajaComponent.reset({
+        this.formDistribucionComponent.reset({
             fechaRegistro: null,
             turnoRegistro: null
         });
