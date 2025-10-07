@@ -4,6 +4,7 @@ import { Observable } from "rxjs";
 import { catchError, map } from "rxjs/operators";
 import { AppConfiguration, Module } from 'src/app/shared/resources/app.configuration';
 import { ErrorInfo } from 'src/app/shared/resources/app.errorInfo';
+import { SistemaProductoDTO, TablaDTO, TurnoDTO } from 'src/app/shared/resources/core.dto';
 
 @Injectable({
     providedIn: 'root'
@@ -25,8 +26,9 @@ export class ProductoService {
       );
   }
 
-  public obtener(): Observable<any> {
-    return this.httpClient.post<any>(this.urlApi + 'obtener', {})
+  public obtener(sistemaProductoDTO: SistemaProductoDTO): Observable<any> {
+    const objetoJSON = { SistemaProductoDTO: sistemaProductoDTO };
+    return this.httpClient.post<any>(this.urlApi + 'obtener', {objetoJSON})
       .pipe(
         map(respuestaAPI => { return respuestaAPI }),
         catchError(new ErrorInfo().parseObservableResponseError)

@@ -30,26 +30,8 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { forkJoin, Observable, Subject, takeUntil } from 'rxjs';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProductoService } from "../../../shared/resources/producto.service";
-import { VentaKardexService } from "../../../shared/resources/ventaKardex.service";
+import { SistemaProductoDTO, TablaDTO, TurnoDTO } from 'src/app/shared/resources/core.dto';
 
-export interface TurnoDTO {
-    name: string;
-    code: string;
-}
-
-export interface TablaDTO {
-    codigoTabla: string;
-    tipoRegistro: string;
-    descripcionTabla: string;
-    codigo: string;
-    descripcionCampo: string;
-    descripcionCorta: string;
-    orden?: number;
-    estado: string;
-    codigoUsuario: string;
-    fechaModificacion?: string;
-    sistemaOperativo: string;
-}
 
 @Component({
     selector: 'productos',
@@ -87,29 +69,18 @@ export interface TablaDTO {
 })
 export class Productos implements OnInit, OnDestroy {
 
+    //Control de vistas
     constructor(
         private methodsCommon: MethodsCommon,
-        private productosService: ProductoService,
-        private ventaKardexService: VentaKardexService
+        private productosService: ProductoService
     ) { }
 
-    public dropdownValue: any = null;
-    public value = 0;
-    public calendarValue: any = null;
-    public mostrarGuardar: boolean = false;
-    public mostrarCancelar: boolean = false;
-    public mostrarRegistro: boolean = false;
-    public fechaSeleccionada: string = '';
-    public turnoSeleccionado: string = '';
-    public fechaRegistro: Date | null = null;
-    public turnoRegistro: TurnoDTO | null = null;
-    public cambiosPendientes: any[] = [];
-    public editadosCantidad: any[] = [];
-    public idIncorrectos: any[] = [];
+    //AG-GRID
     public gridOptions!: GridOptions;
     public gridApi!: GridApi;
     public rowData: any[] = [];
 
+    //Inputs Filtros
     public listaArea: TablaDTO[] = [];
     public listaInventario: TablaDTO[] = [];
     public listaTurno: TablaDTO[] = [];
@@ -117,10 +88,15 @@ export class Productos implements OnInit, OnDestroy {
     public listaGrupo: TablaDTO[] = [];
     public listaEstado: TablaDTO[] = [];
 
-    private destroy$ = new Subject<void>();
+    //Variables de Formulario
+    public mostrarRegistro = false;
+    public sistemaProducto: SistemaProductoDTO = new SistemaProductoDTO();
 
+    //Control Formulario
+    private destroy$ = new Subject<void>();
     public formProductoComponent: FormGroup = new FormGroup({});
 
+    //Control Init y Destroy
     ngOnInit() {
         this.configurarComponente();
     }
@@ -129,11 +105,7 @@ export class Productos implements OnInit, OnDestroy {
         this.destroy$.next();
     }
 
-    public dropdownValues: TurnoDTO[] = [
-        { name: 'AM', code: '001' },
-        { name: 'PM', code: '002' },
-    ];
-
+    //Control de vistas
     public crearFormulario() {
         this.formProductoComponent = new FormGroup({
             tipoInventario: new FormControl(),
@@ -158,7 +130,6 @@ export class Productos implements OnInit, OnDestroy {
         });
     }
 
-    //Metodos Formulario
     public obtenerDatosServidor(): Observable<any> {
         const arrayToForkJoin: any = {
             obtenerDependenciasResult: this.productosService.obtenerDependencias().pipe(),
@@ -229,8 +200,7 @@ export class Productos implements OnInit, OnDestroy {
     public onGridReady = (params: any) => {
         this.gridApi = params.api;
         this.rowData = [];
-
-    };
+    }
 
     public numberParser(params: any) {
         return Number(params.newValue);
@@ -241,111 +211,68 @@ export class Productos implements OnInit, OnDestroy {
         this.mostrarRegistro = true;
     }
 
-    public mostrarGrilla() {
-        this.productosService.obtener().pipe(
-        ).subscribe(respuestaApi => {
-            if (!respuestaApi.mensaje.idLog || respuestaApi.mensaje.idLog === "") {
-                console.log(respuestaApi.listaProductoProductos, respuestaApi.mensaje);
-                this.rowData = respuestaApi.listaProductoProductos;
-                this.gridApi.setGridOption("rowData", this.rowData);
-            }
-        });
-    }
-
-    public limpiarGrilla() {
-        this.gridApi.setGridOption("rowData", this.rowData);
-        this.formProductoComponent.reset({
-            fechaRegistro: null,
-            turnoRegistro: null
-        });
-        this.mostrarGuardar = false;
-        this.mostrarCancelar = false;
-    }
-
-    public validarGrilla() {
-        this.idIncorrectos = [];
-        this.editadosCantidad.forEach(cambio => {
-            const suma = cambio.rowData.cantidadLambramani +
-                cambio.rowData.cantidadUmacollo +
-                cambio.rowData.cantidadAvion +
-                cambio.rowData.cantidadFeria +
-                cambio.rowData.cantidadYanahuara +
-                cambio.rowData.cantidadMetropolitano +
-                cambio.rowData.cantidadMMelgar +
-                cambio.rowData.cantidadSantaRosa
-            cambio.rowData.perdida;
-
-            const id = cambio.rowData.id;
-            const total = cambio.rowData.numeroUnidad;
-            if (total != suma) {
-                this.idIncorrectos.push(id)
-            }
-        });
-
-        if (this.idIncorrectos.length == 0) {
-            this.mostrarGuardar = true;
-            this.mostrarCancelar = true;
-        }
-        else {
-            const idsString = this.idIncorrectos.join(", ");
-            console.info(`Los valores ${idsString} no cuadran con la cantidad.`);
-            this.mostrarGuardar = false;
-            this.mostrarCancelar = false;
-        }
-
-    }
-
-    public cancelar() {
-        this.mostrarGuardar = false;
-        this.mostrarCancelar = false;
-    }
-
-    public filtrarSinCeros() {
-        if (this.gridApi) {
-            const filteredData = this.rowData.filter(row =>
-                row.Cantidad != 0
-            );
-
-            this.gridApi.setGridOption("rowData", filteredData);
-        }
-    }
-
     public onCellValueChanged(event: any) {
-        // Buscar si ya existe un cambio para esta fila
-        const index = this.editadosCantidad.findIndex(
-            item => item.rowIndex === event.rowIndex
-        );
+        // const index = this.editadosCantidad.findIndex(
+        //     item => item.rowIndex === event.rowIndex
+        // );
 
-        const nuevoCambio = {
-            rowIndex: event.rowIndex,     // número de fila
-            id: event.data?.id,           // si tienes un identificador único
-            oldValue: event.oldValue,     // valor anterior
-            rowData: { ...event.data }    // copia de la fila completa
-        };
+        // const nuevoCambio = {
+        //     rowIndex: event.rowIndex,     // número de fila
+        //     id: event.data?.id,           // si tienes un identificador único
+        //     oldValue: event.oldValue,     // valor anterior
+        //     rowData: { ...event.data }    // copia de la fila completa
+        // };
 
-        if (index > -1) {
-            // Si ya existe, lo reemplazamos
-            this.editadosCantidad[index] = nuevoCambio;
-        } else {
-            // Si no existe, lo agregamos
-            this.editadosCantidad.push(nuevoCambio);
-        }
+        // if (index > -1) {
+        //     // Si ya existe, lo reemplazamos
+        //     this.editadosCantidad[index] = nuevoCambio;
+        // } else {
+        //     // Si no existe, lo agregamos
+        //     this.editadosCantidad.push(nuevoCambio);
+        // }
     }
 
     private obtenerDatosFormulario() {
-        
+        const tipoInventario = this.formProductoComponent.get('tipoInventario')?.value as TablaDTO;
+        const nombreProducto = this.formProductoComponent.get('nombreProducto')?.value as TablaDTO;
+        const turno = this.formProductoComponent.get('turno')?.value as TablaDTO;
+        const area = this.formProductoComponent.get('area')?.value as TablaDTO;
+        const seccion = this.formProductoComponent.get('seccion')?.value as TablaDTO;
+        const grupo = this.formProductoComponent.get('grupo')?.value as TablaDTO;
+        const precioVenta = this.formProductoComponent.get('precioVenta')?.value ?? 0;
+        const precioMayoreo = this.formProductoComponent.get('precioMayoreo')?.value ?? 0;
+        const duracionProducto = this.formProductoComponent.get('duracionProducto')?.value ?? 0;
+        const estado = this.formProductoComponent.get('estado')?.value as TablaDTO;
+
+        this.sistemaProducto = {
+            codigoProducto: '',
+            tipoInventario: tipoInventario ? tipoInventario.codigo : '',
+            nombreProducto: nombreProducto ? nombreProducto.descripcionCampo : '',
+            nombreCorto: nombreProducto ? nombreProducto.descripcionCorta : '',
+            fabricante: '',
+            turno: turno ? turno.codigo : '',
+            area: area ? area.codigo : '',
+            seccion: seccion ? seccion.codigo : '',
+            grupo: grupo ? grupo.codigo : '',
+            orden: null,
+            estado: estado ? estado.codigo : '',
+            costoProducto: null,    
+            precioVenta: precioVenta,
+            precioMayorista: precioMayoreo,
+            duracion: duracionProducto,
+        };
     }
 
     public guardar() {
         this.obtenerDatosFormulario();
-        this.ventaKardexService.insertarMasivo(this.rowData).pipe(
+        this.productosService.insertar(this.rowData).pipe(
         ).subscribe(respuestaApi => {
         });
     }
 
     public buscar() {
         this.obtenerDatosFormulario();
-        this.productosService.obtener().pipe(
+        this.productosService.obtener(this.sistemaProducto).pipe(
         ).subscribe(respuestaApi => {
             if (!respuestaApi.mensaje.idLog || respuestaApi.mensaje.idLog === "") {
                 console.log(respuestaApi.listaProductoProductos, respuestaApi.mensaje);
