@@ -30,7 +30,7 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { forkJoin, Observable, Subject, takeUntil } from 'rxjs';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProductoService } from "../../../shared/resources/producto.service";
-import { SistemaProductoDTO, TablaDTO, TurnoDTO } from 'src/app/shared/resources/core.dto';
+import { DTOSistemaProducto, DTOTabla, DTOTurno } from 'src/app/shared/resources/core.dto';
 
 
 @Component({
@@ -81,16 +81,18 @@ export class Productos implements OnInit, OnDestroy {
     public rowData: any[] = [];
 
     //Inputs Filtros
-    public listaArea: TablaDTO[] = [];
-    public listaInventario: TablaDTO[] = [];
-    public listaTurno: TablaDTO[] = [];
-    public listaSeccion: TablaDTO[] = [];
-    public listaGrupo: TablaDTO[] = [];
-    public listaEstado: TablaDTO[] = [];
+    public listaArea: DTOTabla[] = [];
+    public listaInventario: DTOTabla[] = [];
+    public listaTurno: DTOTabla[] = [];
+    public listaSeccion: DTOTabla[] = [];
+    public listaGrupo: DTOTabla[] = [];
+    public listaEstado: DTOTabla[] = [];
 
     //Variables de Formulario
+    public editadosCantidad: any[] = [];
     public mostrarRegistro = false;
-    public sistemaProducto: SistemaProductoDTO = new SistemaProductoDTO();
+    public sistemaProducto: DTOSistemaProducto = new DTOSistemaProducto();
+    public listaSistemaProducto: DTOSistemaProducto[] = [];
 
     //Control Formulario
     private destroy$ = new Subject<void>();
@@ -121,8 +123,9 @@ export class Productos implements OnInit, OnDestroy {
         });
     }
 
-    public configurarComponente() {
+    public async configurarComponente() {
         this.crearFormulario();
+        await this.configureGrid();
         this.obtenerDatosServidor().pipe(
             takeUntil(this.destroy$)
         ).subscribe(respuestaServidor => {
@@ -138,7 +141,7 @@ export class Productos implements OnInit, OnDestroy {
     }
 
     public asignarValoresFormulario(respuestaServidor: any) {
-        
+
         this.listaArea = respuestaServidor.obtenerDependenciasResult.resultado.tipoArea;
         this.listaInventario = respuestaServidor.obtenerDependenciasResult.resultado.tipoInventario;
         this.listaTurno = respuestaServidor.obtenerDependenciasResult.resultado.tipoTurno;
@@ -152,34 +155,51 @@ export class Productos implements OnInit, OnDestroy {
 
     //Metodos Grilla
     public async configureGrid() {
+
         const columnDefs: ColDef[] = [
-            { field: "codLocalAvion", headerName: "Cod. Local Avión", editable: false, hide: true },
-            { field: "codLocalUmacollo", headerName: "Cod. Local Umacollo", editable: false, hide: true },
-            { field: "codLocalMetropolitano", headerName: "Cod. Local Metropolitano", editable: false, hide: true },
-            { field: "codLocalLambramani", headerName: "Cod. Local Lambramani", editable: false, hide: true },
-            { field: "codLocalFeria", headerName: "Cod. Local Feria", editable: false, hide: true },
-            { field: "codLocalMarianoMelgar", headerName: "Cod. Local M. Melgar", editable: false, hide: true },
-            { field: "codLocalSantaRosa", headerName: "Cod. Local Santa Rosa", editable: false, hide: true },
-            { field: "codLocalYanahuara", headerName: "Cod. Local Yanahuara", editable: false, hide: true },
-            { field: "codProducto", headerName: "Código Producto", editable: false, hide: true },
+            { field: "codigoProducto", headerName: "Código Producto", editable: false, hide: true },
             { field: "area", headerName: "Área", editable: false, hide: true },
             { field: "seccion", headerName: "Sección", editable: false, hide: true },
-            { field: "grupo", headerName: "Grupo", editable: false, hide: true },
-            { field: "preventa", headerName: "Preventa", editable: false, valueParser: this.numberParser, hide: true },
+            { field: "tipoInventario", headerName: "Tipo Inventario", editable: false, hide: true },
+            { field: "sistemaOperativo", headerName: "Sistema Operativo", editable: false, hide: true },
+            { field: "codigoUsuario", headerName: "Código Usuario", editable: false, hide: true },
+            { field: "fechaModificacion", headerName: "Fecha Modificación", editable: false, hide: true },
+            { field: "fabricante", headerName: "Codigo Fabricante", editable: false, hide: true },
+            { field: "local.nombreLocal", headerName: "Fabricante", editable: false },
+            { field: "nombreProducto", headerName: "Producto", editable: false },
+            { field: "nombreCorto", headerName: "Nombre Corto", editable: false },
+            { field: "tablaTurno.descripcionCampo", headerName: "Turno", editable: false },
+            { field: "tablaGrupo.descripcionCampo", headerName: "Grupo", editable: false },
+            { field: "orden", headerName: "Orden", editable: true, valueParser: this.numberParser },
+            {
+                field: "tablaEstado.descripcionCampo",
+                headerName: "Estado",
+                editable: true,
+                cellEditor: 'agSelectCellEditor',
+                cellEditorParams: (params: any) => {
+                    // Retorna los valores desde listaEstado
+                    return {
+                        values: this.listaEstado.map(e => e.descripcionCampo)
+                    };
+                },
+                valueSetter: (params: any) => {
+                    const estadoSeleccionado = this.listaEstado.find(
+                        e => e.descripcionCampo === params.newValue
+                    );
+                    if (estadoSeleccionado) {
+                        console.log(estadoSeleccionado.codigo)
+                        params.data.tablaEstado = estadoSeleccionado;
+                        params.data.estado = estadoSeleccionado.codigo;
+                        return true;
+                    }
+                    return false;
+                }
+            },
+            { field: "costoProducto", headerName: "Costo", editable: true, valueParser: this.numberParser },
+            { field: "precioVenta", headerName: "Precio Venta", editable: true, valueParser: this.numberParser },
+            { field: "precioMayorista", headerName: "Precio Mayorista", editable: true, valueParser: this.numberParser },
+            { field: "duracion", headerName: "Duración", editable: true, valueParser: this.numberParser },
 
-            { field: "nombreGrupo", headerName: "Grupo", editable: false },
-            { field: "nombreProducto", headerName: "Nombre", editable: false },
-            { field: "precio", headerName: "Precio", editable: false, valueParser: this.numberParser },
-            { field: "numeroUnidad", headerName: "Cantidad", editable: true, valueParser: this.numberParser },
-            { field: "cantidadLambramani", headerName: "Lambramani", editable: true, valueParser: this.numberParser },
-            { field: "cantidadUmacollo", headerName: "Umacollo", editable: true, valueParser: this.numberParser },
-            { field: "cantidadAvion", headerName: "Avión", editable: true, valueParser: this.numberParser },
-            { field: "cantidadFeria", headerName: "Feria", editable: true, valueParser: this.numberParser },
-            { field: "cantidadYanahuara", headerName: "Yanahuara", editable: true, valueParser: this.numberParser },
-            { field: "cantidadMetropolitano", headerName: "Metropolitano", editable: true, valueParser: this.numberParser },
-            { field: "cantidadMMelgar", headerName: "M. Melgar", editable: true, valueParser: this.numberParser },
-            { field: "cantidadSantaRosa", headerName: "Santa Rosa", editable: true, valueParser: this.numberParser },
-            { field: "perdida", headerName: "Pérdida", editable: true, valueParser: this.numberParser },
         ];
 
         const defaultColDef: ColDef = {
@@ -206,43 +226,41 @@ export class Productos implements OnInit, OnDestroy {
         return Number(params.newValue);
     }
 
+    public onCellValueChanged(event: any) {
+        const index = this.editadosCantidad.findIndex(
+            item => item.rowIndex === event.rowIndex
+        );
+
+        const nuevoCambio = {
+            rowIndex: event.rowIndex,
+            id: event.data?.id,
+            oldValue: event.oldValue,
+            rowData: { ...event.data }
+        };
+
+        if (index > -1) {
+            this.editadosCantidad[index] = nuevoCambio;
+        } else {
+            this.editadosCantidad.push(nuevoCambio.rowData);
+        }
+    }
+
     //Metodos Productos
     public registrar() {
         this.mostrarRegistro = true;
     }
 
-    public onCellValueChanged(event: any) {
-        // const index = this.editadosCantidad.findIndex(
-        //     item => item.rowIndex === event.rowIndex
-        // );
-
-        // const nuevoCambio = {
-        //     rowIndex: event.rowIndex,     // número de fila
-        //     id: event.data?.id,           // si tienes un identificador único
-        //     oldValue: event.oldValue,     // valor anterior
-        //     rowData: { ...event.data }    // copia de la fila completa
-        // };
-
-        // if (index > -1) {
-        //     // Si ya existe, lo reemplazamos
-        //     this.editadosCantidad[index] = nuevoCambio;
-        // } else {
-        //     // Si no existe, lo agregamos
-        //     this.editadosCantidad.push(nuevoCambio);
-        // }
-    }
-
     private obtenerDatosFormulario() {
-        const tipoInventario = this.formProductoComponent.get('tipoInventario')?.value as TablaDTO;
-        const nombreProducto = this.formProductoComponent.get('nombreProducto')?.value as TablaDTO;
-        const turno = this.formProductoComponent.get('turno')?.value as TablaDTO;
-        const area = this.formProductoComponent.get('area')?.value as TablaDTO;
-        const seccion = this.formProductoComponent.get('seccion')?.value as TablaDTO;
-        const grupo = this.formProductoComponent.get('grupo')?.value as TablaDTO;
+        const tipoInventario = this.formProductoComponent.get('tipoInventario')?.value as DTOTabla;
+        const nombreProducto = this.formProductoComponent.get('nombreProducto')?.value as DTOTabla;
+        const turno = this.formProductoComponent.get('turno')?.value as DTOTabla;
+        const area = this.formProductoComponent.get('area')?.value as DTOTabla;
+        const seccion = this.formProductoComponent.get('seccion')?.value as DTOTabla;
+        const grupo = this.formProductoComponent.get('grupo')?.value as DTOTabla;
         const precioVenta = this.formProductoComponent.get('precioVenta')?.value ?? 0;
         const precioMayoreo = this.formProductoComponent.get('precioMayoreo')?.value ?? 0;
         const duracionProducto = this.formProductoComponent.get('duracionProducto')?.value ?? 0;
-        const estado = this.formProductoComponent.get('estado')?.value as TablaDTO;
+        const estado = this.formProductoComponent.get('estado')?.value as DTOTabla;
 
         this.sistemaProducto = {
             codigoProducto: '',
@@ -256,7 +274,7 @@ export class Productos implements OnInit, OnDestroy {
             grupo: grupo ? grupo.codigo : '',
             orden: null,
             estado: estado ? estado.codigo : '',
-            costoProducto: null,    
+            costoProducto: null,
             precioVenta: precioVenta,
             precioMayorista: precioMayoreo,
             duracion: duracionProducto,
@@ -264,8 +282,8 @@ export class Productos implements OnInit, OnDestroy {
     }
 
     public guardar() {
-        this.obtenerDatosFormulario();
-        this.productosService.insertar(this.rowData).pipe(
+        this.listaSistemaProducto = this.editadosCantidad;
+        this.productosService.insertar(this.listaSistemaProducto).pipe(
         ).subscribe(respuestaApi => {
         });
     }
@@ -275,75 +293,10 @@ export class Productos implements OnInit, OnDestroy {
         this.productosService.obtener(this.sistemaProducto).pipe(
         ).subscribe(respuestaApi => {
             if (!respuestaApi.mensaje.idLog || respuestaApi.mensaje.idLog === "") {
-                console.log(respuestaApi.listaProductoProductos, respuestaApi.mensaje);
-                this.rowData = respuestaApi.listaProductoProductos;
+                this.rowData = respuestaApi.resultado;
+                console.log(respuestaApi.resultado)
                 this.gridApi.setGridOption("rowData", this.rowData);
             }
         });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

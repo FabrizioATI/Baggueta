@@ -30,11 +30,7 @@ import { ColDef, GridApi, GridOptions } from 'ag-grid-community';
 import { forkJoin, Observable, Subject } from 'rxjs';
 import { DistribucionService } from "../../../shared/resources/distribucion.service";
 import { VentaKardexService } from "../../../shared/resources/ventaKardex.service";
-
-export interface TurnoDTO {
-    name: string;
-    code: string;
-}
+import { DTOSistemaProducto, DTOTabla, DTOTurno } from 'src/app/shared/resources/core.dto';
 
 @Component({
     selector: 'distribucion',
@@ -85,7 +81,7 @@ export class Distribucion implements OnInit, OnDestroy {
     public fechaSeleccionada: string = '';
     public turnoSeleccionado: string = '';
     public fechaRegistro: Date | null = null;
-    public turnoRegistro: TurnoDTO | null = null;
+    public turnoRegistro: DTOTurno | null = null;
     public cambiosPendientes: any[] = [];
     public editadosCantidad: any[] = [];
     public idIncorrectos: any[] = [];
@@ -95,7 +91,6 @@ export class Distribucion implements OnInit, OnDestroy {
     public rowData: any[] = [];
 
     private destroy$ = new Subject<void>();
-
     public formDistribucionComponent: FormGroup = new FormGroup({});
 
     ngOnInit() {
@@ -106,7 +101,7 @@ export class Distribucion implements OnInit, OnDestroy {
         this.destroy$.next();
     }
 
-    public dropdownValues: TurnoDTO[] = [
+    public dropdownValues: DTOTurno[] = [
         { name: 'AM', code: '001' },
         { name: 'PM', code: '002' },
     ];
