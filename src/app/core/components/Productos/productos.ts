@@ -119,7 +119,8 @@ export class Productos implements OnInit, OnDestroy {
             precioVenta: new FormControl(),
             precioMayoreo: new FormControl(),
             duracionProducto: new FormControl(),
-            estado: new FormControl()
+            estado: new FormControl(),
+            costoProducto: new FormControl(),
         });
     }
 
@@ -157,6 +158,12 @@ export class Productos implements OnInit, OnDestroy {
     public async configureGrid() {
 
         const columnDefs: ColDef[] = [
+            {
+                headerCheckboxSelection: true,  // Muestra el checkbox en la cabecera para seleccionar todo
+                checkboxSelection: true,        // Muestra el checkbox en cada fila para selección individual
+                width: 50,                      // Ajusta el tamaño de la columna
+                editable: false
+            },
             { field: "codigoProducto", headerName: "Código Producto", editable: false, hide: true },
             { field: "area", headerName: "Área", editable: false, hide: true },
             { field: "seccion", headerName: "Sección", editable: false, hide: true },
@@ -164,7 +171,7 @@ export class Productos implements OnInit, OnDestroy {
             { field: "sistemaOperativo", headerName: "Sistema Operativo", editable: false, hide: true },
             { field: "codigoUsuario", headerName: "Código Usuario", editable: false, hide: true },
             { field: "fechaModificacion", headerName: "Fecha Modificación", editable: false, hide: true },
-            { field: "fabricante", headerName: "Codigo Fabricante", editable: false, hide: true },
+            { field: "fabricante", headerName: "Codigo Fabricante", editable: false },
             { field: "local.nombreLocal", headerName: "Fabricante", editable: false },
             { field: "nombreProducto", headerName: "Producto", editable: false },
             { field: "nombreCorto", headerName: "Nombre Corto", editable: false },
@@ -177,7 +184,6 @@ export class Productos implements OnInit, OnDestroy {
                 editable: true,
                 cellEditor: 'agSelectCellEditor',
                 cellEditorParams: (params: any) => {
-                    // Retorna los valores desde listaEstado
                     return {
                         values: this.listaEstado.map(e => e.descripcionCampo)
                     };
@@ -199,7 +205,6 @@ export class Productos implements OnInit, OnDestroy {
             { field: "precioVenta", headerName: "Precio Venta", editable: true, valueParser: this.numberParser },
             { field: "precioMayorista", headerName: "Precio Mayorista", editable: true, valueParser: this.numberParser },
             { field: "duracion", headerName: "Duración", editable: true, valueParser: this.numberParser },
-
         ];
 
         const defaultColDef: ColDef = {
@@ -219,6 +224,7 @@ export class Productos implements OnInit, OnDestroy {
 
     public onGridReady = (params: any) => {
         this.gridApi = params.api;
+        this.gridApi.selectAll();
         this.rowData = [];
     }
 
@@ -252,7 +258,7 @@ export class Productos implements OnInit, OnDestroy {
 
     private obtenerDatosFormulario() {
         const tipoInventario = this.formProductoComponent.get('tipoInventario')?.value as DTOTabla;
-        const nombreProducto = this.formProductoComponent.get('nombreProducto')?.value as DTOTabla;
+        const nombreProducto = this.formProductoComponent.get('nombreProducto')?.value;
         const turno = this.formProductoComponent.get('turno')?.value as DTOTabla;
         const area = this.formProductoComponent.get('area')?.value as DTOTabla;
         const seccion = this.formProductoComponent.get('seccion')?.value as DTOTabla;
@@ -261,12 +267,13 @@ export class Productos implements OnInit, OnDestroy {
         const precioMayoreo = this.formProductoComponent.get('precioMayoreo')?.value ?? 0;
         const duracionProducto = this.formProductoComponent.get('duracionProducto')?.value ?? 0;
         const estado = this.formProductoComponent.get('estado')?.value as DTOTabla;
+        const costoProducto = this.formProductoComponent.get('costoProducto')?.value ?? 0;
 
         this.sistemaProducto = {
             codigoProducto: '',
             tipoInventario: tipoInventario ? tipoInventario.codigo : '',
-            nombreProducto: nombreProducto ? nombreProducto.descripcionCampo : '',
-            nombreCorto: nombreProducto ? nombreProducto.descripcionCorta : '',
+            nombreProducto: nombreProducto ? nombreProducto : '',
+            nombreCorto: nombreProducto ? nombreProducto : '',
             fabricante: '',
             turno: turno ? turno.codigo : '',
             area: area ? area.codigo : '',
@@ -274,7 +281,7 @@ export class Productos implements OnInit, OnDestroy {
             grupo: grupo ? grupo.codigo : '',
             orden: null,
             estado: estado ? estado.codigo : '',
-            costoProducto: null,
+            costoProducto: costoProducto,
             precioVenta: precioVenta,
             precioMayorista: precioMayoreo,
             duracion: duracionProducto,
@@ -282,8 +289,16 @@ export class Productos implements OnInit, OnDestroy {
     }
 
     public guardar() {
+        this.obtenerDatosFormulario();
+        console.log(this.sistemaProducto)
+        this.productosService.insertar(this.sistemaProducto).pipe(
+        ).subscribe(respuestaApi => {
+        });
+    }
+
+    public modificar() {
         this.listaSistemaProducto = this.editadosCantidad;
-        this.productosService.insertar(this.listaSistemaProducto).pipe(
+        this.productosService.modificar(this.listaSistemaProducto).pipe(
         ).subscribe(respuestaApi => {
         });
     }
@@ -298,5 +313,27 @@ export class Productos implements OnInit, OnDestroy {
                 this.gridApi.setGridOption("rowData", this.rowData);
             }
         });
+    }
+
+    public eliminar() {
+        const filasSeleccionadas = this.gridApi.getSelectedRows();
+        console.log(filasSeleccionadas);
+        if (filasSeleccionadas.length > 0) {
+            this.productosService.eliminar(filasSeleccionadas).pipe(
+            ).subscribe(respuestaApi => {
+                if (!respuestaApi.mensaje.idLog || respuestaApi.mensaje.idLog === "") {
+                    this.rowData = respuestaApi.resultado;
+                    console.log(respuestaApi.resultado)
+                    this.gridApi.setGridOption("rowData", this.rowData);
+                }
+            });
+        }
+    }
+
+    public cancelar() {
+        this.mostrarRegistro = false;
+        this.formProductoComponent.reset();
+        this.rowData = [];
+        this.gridApi.setGridOption("rowData", this.rowData);
     }
 }

@@ -18,9 +18,18 @@ export class ProductoService {
         this.urlApi = this.appConfig.getUrlApiByModule(Module.Administrador) + "sistemaproducto/";
     }
 
-  public insertar(listaSistemaProducto: any): Observable<any> {
-    const objetoJSON = { DTOSistemaProducto: listaSistemaProducto };
+  public insertar(sistemaProducto: DTOSistemaProducto): Observable<any> {
+    const objetoJSON = { DTOSistemaProducto: sistemaProducto };
     return this.httpClient.post<any>(this.urlApi + 'insertar', {objetoJSON})
+      .pipe(
+        map(respuestaAPI => { return respuestaAPI }),
+        catchError(new ErrorInfo().parseObservableResponseError)
+      );
+  }
+
+  public modificar(listaSistemaProducto: any): Observable<any> {
+    const objetoJSON = { DTOSistemaProducto: listaSistemaProducto };
+    return this.httpClient.post<any>(this.urlApi + 'modificar', objetoJSON)
       .pipe(
         map(respuestaAPI => { return respuestaAPI }),
         catchError(new ErrorInfo().parseObservableResponseError)
@@ -36,16 +45,8 @@ export class ProductoService {
       );
   }
 
-  public actualizar(objeto: any): Observable<any> {
-    return this.httpClient.post<any>(this.urlApi + 'actualizar', objeto)
-      .pipe(
-        map(respuestaAPI => { return respuestaAPI }),
-        catchError(new ErrorInfo().parseObservableResponseError)
-      );
-  }
-
-  public eliminar(id: number): Observable<any> {
-    const objetoJSON = { id: id };
+  public eliminar(listaSistemaProducto: any): Observable<any> {
+    const objetoJSON = { DTOSistemaProducto: listaSistemaProducto };
     return this.httpClient.post<any>(this.urlApi + 'eliminar', objetoJSON)
       .pipe(
         map(respuestaAPI => { return respuestaAPI }),
